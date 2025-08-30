@@ -1,0 +1,3 @@
+[submodule "libs/certify"]
+	path = libs/certify
+	url = https://github.com/djarek/certify.git
