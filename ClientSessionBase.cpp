@@ -17,6 +17,16 @@
 namespace scaryws
 {
 
+ClientSessionBase::ClientSessionBase(net::io_context& ioc)
+    : m_resolver(net::make_strand(ioc))
+{
+}
+
+void ClientSessionBase::setListener(IClientSessionListener* listener)
+{
+    m_listener = listener;
+}
+
 void ClientSessionBase::on_write(beast::error_code ec, std::size_t bytes_transferred)
 {
     boost::ignore_unused(bytes_transferred);

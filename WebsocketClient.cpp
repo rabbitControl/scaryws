@@ -32,9 +32,9 @@ WebsocketClient::~WebsocketClient()
 
     if (m_thread)
     {
-        // TODO: stop
         m_thread->join();
         delete m_thread;
+        m_thread = nullptr;
     }
 }
 

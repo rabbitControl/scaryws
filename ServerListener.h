@@ -32,15 +32,8 @@ class ServerListener
 public:
     ServerListener(net::io_context& ioc, tcp::endpoint endpoint, bool binary);
 
-    void run()
-    {
-        do_accept();
-    }
-
-    void setListener(IServerSessionListener* listener)
-    {
-        m_listener = listener;
-    }
+    void run();
+    void setListener(IServerSessionListener* listener);
 
     void cancel();
     void sendToAll(const std::string& msg, void* except = nullptr);
@@ -48,14 +41,8 @@ public:
     void sendTo(const std::string& msg, void* client);
     void sendTo(const std::vector<char>& data, void* client);
 
-    bool isListening() const
-    {
-        return acceptor.is_open();
-    }
-
-    size_t sessionCount() const {
-        return m_sessions.size();
-    }
+    bool isListening() const;
+    size_t sessionCount() const;
 
 private:
     void fail(beast::error_code ec, char const* what);

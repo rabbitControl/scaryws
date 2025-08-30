@@ -32,14 +32,9 @@ namespace scaryws
 class ClientSessionBase
 {
 public:
-    explicit ClientSessionBase(net::io_context& ioc)
-        : m_resolver(net::make_strand(ioc))
-    {}
+    explicit ClientSessionBase(net::io_context& ioc);
 
-    void setListener(IClientSessionListener* listener)
-    {
-        m_listener = listener;
-    }
+    void setListener(IClientSessionListener* listener);
 
 public:
     virtual bool isConnected() const = 0;

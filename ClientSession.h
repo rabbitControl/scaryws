@@ -40,10 +40,8 @@ class ClientSession
     , public std::enable_shared_from_this<ClientSession>
 {
 public:
-    // Resolver and socket require an io_context
     explicit ClientSession(net::io_context& ioc, bool binary = true);
 
-    // Start the asynchronous operation
     void run(const boost::urls::url& url);
 
     void close();

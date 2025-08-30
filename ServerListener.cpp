@@ -51,6 +51,16 @@ ServerListener::ServerListener(net::io_context& ioc, tcp::endpoint endpoint, boo
     }
 }
 
+void ServerListener::run()
+{
+    do_accept();
+}
+
+void ServerListener::setListener(IServerSessionListener* listener)
+{
+    m_listener = listener;
+}
+
 
 void ServerListener::cancel()
 {
@@ -117,6 +127,17 @@ void ServerListener::sendTo(const std::vector<char>& data, void* client)
     }
 }
 
+bool ServerListener::isListening() const
+{
+    return acceptor.is_open();
+}
+
+size_t ServerListener::sessionCount() const
+{
+    return m_sessions.size();
+}
+
+
 void ServerListener::do_accept()
 {
     // The new connection gets its own strand
@@ -127,9 +148,9 @@ void ServerListener::do_accept()
 }
 
 void ServerListener::on_accept(beast::error_code ec,
-                         tcp::socket socket)
+                               tcp::socket socket)
 {
-    if(ec)
+    if (ec)
     {
         fail(ec, "accept");
     }
@@ -140,6 +161,8 @@ void ServerListener::on_accept(beast::error_code ec,
         session->setListener(m_listener);
         session->run([this](ServerSession* session)
         {
+            // closed callback
+            // remove session
             std::lock_guard<std::recursive_mutex> lock(m_mutex);
 
             auto it = m_sessions.begin();
@@ -155,14 +178,15 @@ void ServerListener::on_accept(beast::error_code ec,
             }
         });
 
+        // add session
         {
             std::lock_guard<std::recursive_mutex> lock(m_mutex);
             m_sessions.push_back(session);
-
-            // TODO: how to remove the session??
         }
     }
 
+
+    // accept next
     do_accept();
 }
 

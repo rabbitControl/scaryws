@@ -10,6 +10,8 @@
 
 #include "ServerSession.h"
 
+#include <iostream>
+
 namespace scaryws
 {
 
@@ -43,6 +45,11 @@ void ServerSession::send(const std::vector<char>& data)
     }
 
     sendNext();
+}
+
+void ServerSession::setListener(IServerSessionListener* listener)
+{
+    m_listener = listener;
 }
 
 void ServerSession::sendNext()
@@ -179,6 +186,11 @@ void ServerSession::on_write(beast::error_code ec,
     m_queue.erase(m_queue.begin());
 
     sendNext();
+}
+
+void ServerSession::fail(beast::error_code ec, char const* what)
+{
+    std::cerr << "ServerSession: " << what << ": " << ec.message() << "\n";
 }
 
 } // namespace scaryws
