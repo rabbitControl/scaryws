@@ -19,74 +19,102 @@ add_library(${PROJECT_NAME} STATIC
   IServerSessionListener.h
 )
 
-
 # openssl
 set(OPENSSL_PATH "" CACHE FILEPATH "Custom OpenSSL path")
-
-if("${OPENSSL_PATH}" STREQUAL "")
-
-  set(OPENSSL_USE_STATIC_LIBS TRUE)
-  find_package(OpenSSL REQUIRED)
-
-  if (OpenSSL_FOUND)
-
-    # OPENSSL_VERSION
-    # OPENSSL_LIBRARIES
-
-    message("Found OpenSSL at: ${OPENSSL_INCLUDE_DIR}")
-    include_directories(${OPENSSL_INCLUDE_DIR})
-  endif()
-
-else()
-
-  message("Using OpenSSL path: ${OPENSSL_PATH}")
-
-  # set custom ssl libraries
-  include_directories(${OPENSSL_PATH}/include)
-  set(CUSTOM_SSL_LIB_PATH ${OPENSSL_PATH}/lib)
-
-  set( _rcp_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
-
-  if(WIN32)
-      list(INSERT CMAKE_FIND_LIBRARY_SUFFIXES 0 .lib .a)
-  else()
-    set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
-  endif()
-
-  find_library(SSL_LIB NAMES ssl REQUIRED NO_CACHE NO_DEFAULT_PATH PATHS ${CUSTOM_SSL_LIB_PATH})
-  find_library(CRYPTO_LIB NAMES crypto REQUIRED NO_CACHE NO_DEFAULT_PATH PATHS ${CUSTOM_SSL_LIB_PATH})
-
-endif()
-
 
 # boost
 set(USE_CUSTOM_BOOST_URL FALSE CACHE BOOL "Use custom path for boost and boost_url")
 set(BOOST_INCLUDE_PATH "" CACHE FILEPATH "Path for boost includes")
 set(BOOST_URL_LIB_PATH "" CACHE FILEPATH "Path for boost_url library")
 
-if (USE_CUSTOM_BOOST_URL)
-
-  message("Using custom path for boost and boost_url")
-  message("boost path: ${BOOST_INCLUDE_PATH}")
-  message("boost_url path: ${BOOST_URL_LIB_PATH}")
-
-  include_directories(${BOOST_INCLUDE_PATH})
-
-  find_library(BOOST_URL_LIB NAMES boost_url REQUIRED NO_CACHE NO_DEFAULT_PATH PATHS ${BOOST_URL_LIB_PATH})
-
-else()
-
-  set(Boost_USE_STATIC_LIBS TRUE)
-  find_package(Boost CONFIG REQUIRED)
-  find_package(Boost REQUIRED COMPONENTS url)
-
-  if(Boost_FOUND)
-    message("Found Boost: ${Boost_INCLUDE_DIRS}")
-    include_directories(${Boost_INCLUDE_DIRS})
-  endif()
-
-endif()
-
-
 # boost certify
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs/certify/include)
+
+
+function(scaryws_setup_target TARGET)
+
+  #
+  # boost
+  #
+  if (USE_CUSTOM_BOOST_URL)
+
+    message("Using custom path for boost and boost_url")
+    message("boost path: ${BOOST_INCLUDE_PATH}")
+    message("boost_url path: ${BOOST_URL_LIB_PATH}")
+
+    include_directories(${BOOST_INCLUDE_PATH})
+
+    find_library(BOOST_URL_LIB NAMES boost_url REQUIRED NO_CACHE NO_DEFAULT_PATH PATHS ${BOOST_URL_LIB_PATH})
+
+    target_link_libraries(${TARGET} ${BOOST_URL_LIB})
+
+  else()
+
+    set(Boost_USE_STATIC_LIBS TRUE)
+    find_package(Boost CONFIG REQUIRED)
+    find_package(Boost REQUIRED COMPONENTS url)
+
+    if(Boost_FOUND)
+      message("Found Boost: ${Boost_INCLUDE_DIRS}")
+      include_directories(${Boost_INCLUDE_DIRS})
+      target_link_libraries(${TARGET} Boost::url)
+    endif()
+
+  endif()
+
+
+  #
+  # openssl
+  #
+  if("${OPENSSL_PATH}" STREQUAL "")
+
+    set(OPENSSL_USE_STATIC_LIBS TRUE)
+    find_package(OpenSSL REQUIRED)
+
+    if (OpenSSL_FOUND)
+
+      # OPENSSL_VERSION
+      # OPENSSL_LIBRARIES
+
+      message("Found OpenSSL at: ${OPENSSL_INCLUDE_DIR}")
+      include_directories(${OPENSSL_INCLUDE_DIR})
+      target_link_libraries(${TARGET} OpenSSL::SSL)
+    endif()
+
+  else()
+
+    message("Using OpenSSL path: ${OPENSSL_PATH}")
+
+    # set custom ssl libraries
+    include_directories(${OPENSSL_PATH}/include)
+    set(CUSTOM_SSL_LIB_PATH ${OPENSSL_PATH}/lib)
+
+    set( _rcp_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
+
+    if(WIN32)
+        list(INSERT CMAKE_FIND_LIBRARY_SUFFIXES 0 .lib .a)
+    else()
+      set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
+    endif()
+
+    find_library(SSL_LIB NAMES ssl REQUIRED NO_CACHE NO_DEFAULT_PATH PATHS ${CUSTOM_SSL_LIB_PATH})
+    find_library(CRYPTO_LIB NAMES crypto REQUIRED NO_CACHE NO_DEFAULT_PATH PATHS ${CUSTOM_SSL_LIB_PATH})
+
+    target_link_libraries(${TARGET} ${SSL_LIB} ${CRYPTO_LIB})
+
+  endif()
+
+
+  if (APPLE)
+
+    target_link_libraries(${TARGET}
+      "-framework CoreFoundation"
+      "-framework Security"
+    )
+
+  endif()
+
+endfunction()
+
+
+scaryws_setup_target(${PROJECT_NAME})
