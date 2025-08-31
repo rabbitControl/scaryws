@@ -231,7 +231,7 @@ ClientSessionSSL::on_close(beast::error_code ec)
 
     // If we get here then the connection is closed gracefully
 #ifdef WSLIB_CLIENT_SESSION_VERBOSE
-    cout << "closed ssl (" << reason.code << "): " << reason.reason << endl;
+    std::cout << "closed ssl (" << reason.code << "): " << reason.reason << std::endl;
 #endif
 }
 

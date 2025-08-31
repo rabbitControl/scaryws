@@ -63,7 +63,7 @@ void ClientSessionBase::receivedData(beast::error_code ec,
     {
         // no listener
 #ifdef WSLIB_CLIENT_SESSION_VERBOSE
-        cout << "no listener, but received received: " << bytes_transferred << " bytes" << endl;
+        std::cout << "no listener, but received received: " << bytes_transferred << " bytes" << std::endl;
 #endif
     }
 
@@ -74,7 +74,7 @@ void ClientSessionBase::receivedData(beast::error_code ec,
 void ClientSessionBase::fail(beast::error_code ec, const std::string& what)
 {
 #ifdef WSLIB_CLIENT_SESSION_VERBOSE
-    cerr << "fail: " << what << ": " << ec.message() << endl;
+    std::cerr << "fail: " << what << ": " << ec.message() << std::endl;
 #endif
 
     if (m_listener)
