@@ -10,8 +10,13 @@
 
 #include "ClientSessionSSL.h"
 
+#ifdef WSLIB_CLIENT_SESSION_VERBOSE
+#include <iostream>
+#endif
+
 #include <boost/certify/extensions.hpp>
 #include "boost/certify/https_verification.hpp"
+
 
 namespace scaryws
 {
@@ -98,7 +103,7 @@ void ClientSessionSSL::run(const boost::urls::url& url)
 void ClientSessionSSL::on_resolve(beast::error_code ec,
                                   tcp::resolver::results_type results)
 {
-    if(ec)
+    if (ec)
     {
         return fail(ec, std::string("resolve: ") + m_url.host());
     }
@@ -116,7 +121,7 @@ void ClientSessionSSL::on_resolve(beast::error_code ec,
 void ClientSessionSSL::on_connect(beast::error_code ec,
                              tcp::resolver::results_type::endpoint_type ep)
 {
-    if(ec)
+    if (ec)
     {
         return fail(ec, "connect");
     }
@@ -137,7 +142,7 @@ void ClientSessionSSL::on_connect(beast::error_code ec,
 void
 ClientSessionSSL::on_ssl_handshake(beast::error_code ec)
 {
-    if(ec)
+    if (ec)
     {
         return fail(ec, "ssl_handshake");
     }
@@ -179,7 +184,7 @@ ClientSessionSSL::on_ssl_handshake(beast::error_code ec)
 void
 ClientSessionSSL::on_handshake(beast::error_code ec)
 {
-    if(ec)
+    if (ec)
     {
         return fail(ec, "handshake");
     }
@@ -204,7 +209,7 @@ void ClientSessionSSL::on_read(beast::error_code ec,
         return;
     }
 
-    if(ec)
+    if (ec)
     {
         return fail(ec, "read");
     }
@@ -223,15 +228,14 @@ void ClientSessionSSL::on_read(beast::error_code ec,
 void
 ClientSessionSSL::on_close(beast::error_code ec)
 {
-    if(ec)
+    if (ec)
     {
         return fail(ec, "close");
     }
 
-    auto reason = m_socket.reason();
-
     // If we get here then the connection is closed gracefully
 #ifdef WSLIB_CLIENT_SESSION_VERBOSE
+    auto reason = m_socket.reason();
     std::cout << "closed ssl (" << reason.code << "): " << reason.reason << std::endl;
 #endif
 }

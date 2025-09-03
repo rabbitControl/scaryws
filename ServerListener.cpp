@@ -23,30 +23,30 @@ ServerListener::ServerListener(net::io_context& ioc, tcp::endpoint endpoint, boo
     beast::error_code ec;
 
     acceptor.open(endpoint.protocol(), ec);
-    if(ec)
+    if (ec)
     {
-        fail(ec, "open");
+        fail(ec, "acceptor open");
         return;
     }
 
     acceptor.set_option(net::socket_base::reuse_address(true), ec);
-    if(ec)
+    if (ec)
     {
-        fail(ec, "set_option");
+        fail(ec, "acceptor set_option");
         return;
     }
 
     acceptor.bind(endpoint, ec);
-    if(ec)
+    if (ec)
     {
-        fail(ec, "bind");
+        fail(ec, "acceptor bind");
         return;
     }    
 
     acceptor.listen(net::socket_base::max_listen_connections, ec);
-    if(ec)
+    if (ec)
     {
-        fail(ec, "listen");
+        fail(ec, "acceptor listen");
         return;
     }
 }

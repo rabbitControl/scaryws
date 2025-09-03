@@ -21,10 +21,6 @@
 
 // #define WSLIB_CLIENT_SESSION_VERBOSE
 
-#ifdef WSLIB_CLIENT_SESSION_VERBOSE
-#include <iostream>
-#endif
-
 namespace beast = boost::beast;
 namespace websocket = beast::websocket;
 namespace net = boost::asio;

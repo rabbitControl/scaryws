@@ -111,7 +111,7 @@ void ServerSession::on_run()
 
 void ServerSession::on_accept(beast::error_code ec)
 {
-    if(ec)
+    if (ec)
     {
         return fail(ec, "accept");
     }
