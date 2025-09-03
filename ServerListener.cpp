@@ -17,7 +17,7 @@ namespace scaryws
 
 ServerListener::ServerListener(net::io_context& ioc, tcp::endpoint endpoint, bool binary)
     : ioc(ioc)
-    , acceptor(ioc)
+    , acceptor(net::make_strand(ioc))
     , m_binary(binary)
 {
     beast::error_code ec;
@@ -66,11 +66,18 @@ void ServerListener::cancel()
 {
     std::lock_guard<std::recursive_mutex> lock(m_mutex);
 
+    for (auto& session : m_sessions)
+    {
+        session->close();
+    }
+
     acceptor.cancel();
     acceptor.close();
-    ioc.stop();
 
-    m_sessions.clear();
+    if (m_sessions.empty())
+    {
+        ioc.stop();
+    }
 }
 
 void ServerListener::sendToAll(const std::string& msg, void* except)
@@ -171,10 +178,23 @@ void ServerListener::on_accept(beast::error_code ec,
                 if (it->get() == session)
                 {
                     m_sessions.erase(it);
+
+                    if (m_listener)
+                    {
+                        m_listener->clientConnected(session);
+                    }
+
                     break;
                 }
 
                 it++;
+            }
+
+            if (!acceptor.is_open() &&
+                m_sessions.empty())
+            {
+                // all clients closed - stop the world
+                ioc.stop();
             }
         });
 
@@ -192,6 +212,11 @@ void ServerListener::on_accept(beast::error_code ec,
 
 void ServerListener::fail(beast::error_code ec, char const* what)
 {
+    if (ec == boost::asio::error::operation_aborted)
+    {
+        return;
+    }
+
     std::cerr << "Listener: " << what << ": " << ec.message() << "\n";
 }
 

@@ -42,6 +42,8 @@ public:
 
     void setListener(IServerSessionListener* listener);
 
+    void close();
+
 private:
     void sendNext();
     void on_run();
@@ -49,6 +51,8 @@ private:
     void do_read();
     void on_read(beast::error_code ec, std::size_t bytes_transferred);
     void on_write(beast::error_code ec, std::size_t bytes_transferred);
+
+    void do_close();
 
     void fail(beast::error_code ec, char const* what);
 

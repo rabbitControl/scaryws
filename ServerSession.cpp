@@ -63,6 +63,15 @@ void ServerSession::sendNext()
     }
 }
 
+void ServerSession::close()
+{
+    auto self(shared_from_this());
+    net::dispatch(m_socket.get_executor(), [self]
+    {
+        self->m_socket.close(boost::beast::websocket::normal);
+    });
+}
+
 // Get on the correct executor
 void ServerSession::run(std::function<void(ServerSession*)>&& cb)
 {
@@ -128,22 +137,20 @@ void ServerSession::on_read(beast::error_code ec,
 {
     boost::ignore_unused(bytes_transferred);
 
-    if(ec == websocket::error::closed)
+    if (ec == websocket::error::closed ||
+        ec == boost::asio::error::operation_aborted)
     {
+        do_close();
+
         if (m_closedCb)
         {
             m_closedCb(this);
         }
 
-        if (m_listener)
-        {
-            m_listener->clientDisconnected(this);
-        }
-
         return;
     }
 
-    if(ec)
+    if (ec)
     {
         return fail(ec, "read");
     }
@@ -175,17 +182,36 @@ void ServerSession::on_write(beast::error_code ec,
 {
     boost::ignore_unused(bytes_transferred);
 
-    if(ec)
+    if (ec == websocket::error::closed ||
+        ec == boost::asio::error::operation_aborted)
+    {
+        do_close();
+
+        if (m_closedCb)
+        {
+            m_closedCb(this);
+        }
+
+        return;
+    }
+
+
+    if (ec)
     {
         fail(ec, "write");
     }
 
     std::lock_guard<std::mutex> lock(m_mutex);
 
-    // Remove the string from the queue
     m_queue.erase(m_queue.begin());
 
     sendNext();
+}
+
+void ServerSession::do_close()
+{
+    beast::error_code ec;
+    beast::get_lowest_layer(m_socket).socket().shutdown(tcp::socket::shutdown_both, ec);
 }
 
 void ServerSession::fail(beast::error_code ec, char const* what)

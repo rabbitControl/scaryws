@@ -196,9 +196,10 @@ ClientSessionSSL::on_handshake(beast::error_code ec)
 }
 
 void ClientSessionSSL::on_read(beast::error_code ec,
-                          std::size_t bytes_transferred)
+                               std::size_t bytes_transferred)
 {
-    if(ec == websocket::error::closed)
+    if (ec == websocket::error::closed ||
+        ec == boost::asio::error::operation_aborted)
     {
         return;
     }

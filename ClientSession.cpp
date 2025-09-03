@@ -176,7 +176,8 @@ ClientSession::on_handshake(beast::error_code ec)
 void ClientSession::on_read(beast::error_code ec,
                       std::size_t bytes_transferred)
 {
-    if(ec == websocket::error::closed)
+    if (ec == websocket::error::closed ||
+        ec == boost::asio::error::operation_aborted)
     {
         return;
     }

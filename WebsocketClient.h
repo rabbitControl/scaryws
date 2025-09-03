@@ -65,8 +65,9 @@ private:
     bool m_verifyPeer{true};
 
     std::thread* m_thread{nullptr};
-    mutable std::mutex m_mutex;
+    mutable std::recursive_mutex m_mutex;
 
+    std::shared_ptr<net::io_context> m_ioc;
     std::shared_ptr<ClientSession> m_session;
     std::shared_ptr<ClientSessionSSL> m_sslSession;
 };

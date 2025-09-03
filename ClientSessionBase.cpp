@@ -31,7 +31,13 @@ void ClientSessionBase::on_write(beast::error_code ec, std::size_t bytes_transfe
 {
     boost::ignore_unused(bytes_transferred);
 
-    if(ec)
+    if (ec == websocket::error::closed ||
+        ec == boost::asio::error::operation_aborted)
+    {
+        return;
+    }
+
+    if (ec)
     {
         fail(ec, "write");
     }
@@ -73,8 +79,15 @@ void ClientSessionBase::receivedData(beast::error_code ec,
 
 void ClientSessionBase::fail(beast::error_code ec, const std::string& what)
 {
+    // ignore some
+    if (ec == websocket::error::closed ||
+        ec == boost::asio::error::operation_aborted)
+    {
+        return;
+    }
+
 #ifdef WSLIB_CLIENT_SESSION_VERBOSE
-    std::cerr << "fail: " << what << ": " << ec.message() << std::endl;
+    std::cerr << "Client: " << what << ": " << ec.message() << std::endl;
 #endif
 
     if (m_listener)

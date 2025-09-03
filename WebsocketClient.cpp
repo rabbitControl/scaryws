@@ -94,19 +94,28 @@ std::string WebsocketClient::url() const
 
 void WebsocketClient::disconnect()
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 
-    if (m_session)
+    bool is_connected = isConnected();
+
+    if (is_connected)
     {
-        m_session->close();
+        if (m_session)
+        {
+            m_session->close();
+        }
+        else if (m_sslSession)
+        {
+            m_sslSession->close();
+        }
+        else
+        {
+            // std::cout << "close: no session" << std::endl;
+        }
     }
-    else if (m_sslSession)
+    else if (m_ioc)
     {
-        m_sslSession->close();
-    }
-    else
-    {
-        // cout << "close: no session" << endl;
+        m_ioc->stop();
     }
 
     m_session.reset();
@@ -116,7 +125,7 @@ void WebsocketClient::disconnect()
 
 void WebsocketClient::send(const std::string& str)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 
     if (m_session)
     {
@@ -128,13 +137,13 @@ void WebsocketClient::send(const std::string& str)
     }
     else
     {
-        // cout << "send: no session" << endl;
+        // std::cout << "send: no session" << std::endl;
     }
 }
 
 void WebsocketClient::send(const std::vector<char>& data)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 
     if (m_session)
     {
@@ -146,13 +155,13 @@ void WebsocketClient::send(const std::vector<char>& data)
     }
     else
     {
-        // cout << "send: no session" << endl;
+        // std::cout << "send: no session" << std::endl;
     }
 }
 
 bool WebsocketClient::isConnected() const
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 
     if (m_session)
     {
@@ -217,18 +226,19 @@ void WebsocketClient::received(const std::string& msg)
 
 void WebsocketClient::run(const boost::urls::url& url)
 {
-    net::io_context ioc;
+    // net::io_context ioc;
+    m_ioc = std::make_shared<net::io_context>();
 
     {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        m_session = std::make_shared<ClientSession>(ioc, m_binary);
+        std::lock_guard<std::recursive_mutex> lock(m_mutex);
+        m_session = std::make_shared<ClientSession>(*m_ioc, m_binary);
         m_session->setListener(this);
         m_session->run(url);
     }
 
     try
     {
-        ioc.run();
+        m_ioc->run();
     }
     catch(std::exception& ex)
     {
@@ -238,17 +248,20 @@ void WebsocketClient::run(const boost::urls::url& url)
     // call closed
     disconnected(0);
 
+    if (m_session)
     {
-        std::lock_guard<std::mutex> lock(m_mutex);
+        std::lock_guard<std::recursive_mutex> lock(m_mutex);
         m_session.reset();
     }
 
-    // cout << "client session ended" << endl;
+    m_ioc.reset();
+
+    // std::cout << "client session ended" << std::endl;
 }
 
 void WebsocketClient::runSSL(const boost::urls::url& url)
 {
-    net::io_context ioc;
+    m_ioc = std::make_shared<net::io_context>();
 
     ssl::context ctx{ssl::context::tls_client};
 
@@ -268,15 +281,15 @@ void WebsocketClient::runSSL(const boost::urls::url& url)
 
 
     {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        m_sslSession = std::make_shared<ClientSessionSSL>(ioc, ctx, m_binary);
+        std::lock_guard<std::recursive_mutex> lock(m_mutex);
+        m_sslSession = std::make_shared<ClientSessionSSL>(*m_ioc, ctx, m_binary);
         m_sslSession->setListener(this);
         m_sslSession->run(url);
     }
 
     try
     {
-        ioc.run();
+        m_ioc->run();
     }
     catch(std::exception& ex)
     {
@@ -287,11 +300,13 @@ void WebsocketClient::runSSL(const boost::urls::url& url)
     disconnected(0);
 
     {
-        std::lock_guard<std::mutex> lock(m_mutex);
+        std::lock_guard<std::recursive_mutex> lock(m_mutex);
         m_sslSession.reset();
     }
 
-    // cout << "client ssl session ended" << endl;
+    m_ioc.reset();
+
+    // std::cout << "client ssl session ended" << std::endl;
 }
 
 } // namespace scaryws
