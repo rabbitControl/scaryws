@@ -56,7 +56,7 @@ function(scaryws_setup_target TARGET)
     if(Boost_FOUND)
       message("Found Boost: ${Boost_INCLUDE_DIRS}")
       include_directories(${Boost_INCLUDE_DIRS})
-      target_link_libraries(${TARGET} Boost::url)
+      target_link_libraries(${TARGET} PRIVATE Boost::url)
     endif()
 
   endif()
@@ -77,7 +77,7 @@ function(scaryws_setup_target TARGET)
 
       message("Found OpenSSL at: ${OPENSSL_INCLUDE_DIR}")
       include_directories(${OPENSSL_INCLUDE_DIR})
-      target_link_libraries(${TARGET} OpenSSL::SSL)
+      target_link_libraries(${TARGET} PRIVATE OpenSSL::SSL)
     endif()
 
   else()
@@ -96,20 +96,29 @@ function(scaryws_setup_target TARGET)
       set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
     endif()
 
-    find_library(SSL_LIB NAMES ssl REQUIRED NO_CACHE NO_DEFAULT_PATH PATHS ${CUSTOM_SSL_LIB_PATH})
-    find_library(CRYPTO_LIB NAMES crypto REQUIRED NO_CACHE NO_DEFAULT_PATH PATHS ${CUSTOM_SSL_LIB_PATH})
+    if (WIN32)
+      find_library(SSL_LIB NAMES ssl_static REQUIRED NO_CACHE NO_DEFAULT_PATH PATHS ${CUSTOM_SSL_LIB_PATH})
+      find_library(CRYPTO_LIB NAMES crypto_static REQUIRED NO_CACHE NO_DEFAULT_PATH PATHS ${CUSTOM_SSL_LIB_PATH})
+    else()
+      find_library(SSL_LIB NAMES ssl REQUIRED NO_CACHE NO_DEFAULT_PATH PATHS ${CUSTOM_SSL_LIB_PATH})
+      find_library(CRYPTO_LIB NAMES crypto REQUIRED NO_CACHE NO_DEFAULT_PATH PATHS ${CUSTOM_SSL_LIB_PATH})
+    endif()
 
-    target_link_libraries(${TARGET} ${SSL_LIB} ${CRYPTO_LIB})
+    target_link_libraries(${TARGET} PRIVATE ${SSL_LIB} ${CRYPTO_LIB})
 
   endif()
 
 
   if (APPLE)
 
-    target_link_libraries(${TARGET}
+    target_link_libraries(${TARGET} PRIVATE
       "-framework CoreFoundation"
       "-framework Security"
     )
+
+  elseif (WIN32)
+
+    target_link_libraries(${TARGET} PRIVATE crypt32 wsock32 ws2_32)
 
   endif()
 
