@@ -21,11 +21,11 @@ add_library(${PROJECT_NAME} STATIC
 )
 
 # openssl
-set(OPENSSL_PATH "" CACHE FILEPATH "Custom OpenSSL path")
+set(OPENSSL_PATH "" CACHE PATH "Custom OpenSSL path")
 
 # boost
 set(USE_CUSTOM_BOOST_URL FALSE CACHE BOOL "Use custom path for boost and boost_url")
-set(BOOST_INCLUDE_PATH "" CACHE FILEPATH "Path for boost includes")
+set(BOOST_INCLUDE_PATH "" CACHE PATH "Path for boost includes")
 set(BOOST_URL_LIB_PATH "" CACHE FILEPATH "Path for boost_url library")
 
 # boost certify
