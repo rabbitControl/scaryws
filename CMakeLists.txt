@@ -45,9 +45,7 @@ function(scaryws_setup_target TARGET)
 
     include_directories(${BOOST_INCLUDE_PATH})
 
-    find_library(BOOST_URL_LIB NAMES boost_url REQUIRED NO_CACHE NO_DEFAULT_PATH PATHS ${BOOST_URL_LIB_PATH})
-
-    target_link_libraries(${TARGET} ${BOOST_URL_LIB})
+    target_link_libraries(${TARGET} PRIVATE ${BOOST_URL_LIB_PATH})
 
   else()
 
