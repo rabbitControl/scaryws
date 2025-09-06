@@ -181,7 +181,7 @@ void ServerListener::on_accept(beast::error_code ec,
 
                     if (m_listener)
                     {
-                        m_listener->clientConnected(session);
+                        m_listener->clientDisconnected(session);
                     }
 
                     break;
