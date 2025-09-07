@@ -6,6 +6,14 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+if (WIN32)
+  if (MSVC)
+    add_compile_options(/bigobj)
+  else()
+    add_compile_options(-Wa,-mbig-obj)
+  endif()
+endif()
+
 add_library(${PROJECT_NAME} STATIC
   # client
   WebsocketClient.h WebsocketClient.cpp
