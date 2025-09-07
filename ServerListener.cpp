@@ -157,6 +157,19 @@ void ServerListener::do_accept()
 void ServerListener::on_accept(beast::error_code ec,
                                tcp::socket socket)
 {
+    // This can happen during exit
+    if (!acceptor.is_open())
+    {
+        return;
+    }
+
+    // This can happen during exit
+    if (ec == boost::asio::error::operation_aborted)
+    {
+        return;
+    }
+
+
     if (ec)
     {
         fail(ec, "accept");
