@@ -68,7 +68,9 @@ void ServerSession::close()
     auto self(shared_from_this());
     net::dispatch(m_socket.get_executor(), [self]
     {
-        self->m_socket.close(boost::beast::websocket::normal);
+        // TODO: gracefully close this connection
+        // self->m_socket.close(boost::beast::websocket::normal);
+        self->m_socket.next_layer().cancel();
     });
 }
 
