@@ -73,11 +73,6 @@ void ServerListener::cancel()
 
     acceptor.cancel();
     acceptor.close();
-
-    if (m_sessions.empty())
-    {
-        ioc.stop();
-    }
 }
 
 void ServerListener::sendToAll(const std::string& msg, void* except)
