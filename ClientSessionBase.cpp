@@ -81,7 +81,8 @@ void ClientSessionBase::fail(beast::error_code ec, const std::string& what)
 {
     // ignore some
     if (ec == websocket::error::closed ||
-        ec == boost::asio::error::operation_aborted)
+        ec == boost::asio::error::operation_aborted ||
+        ec == boost::asio::error::misc_errors::eof)
     {
         return;
     }
