@@ -50,8 +50,8 @@ private:
     void on_accept(beast::error_code ec, tcp::socket socket);
 
 private:
-    net::io_context& ioc;
-    tcp::acceptor acceptor;
+    net::io_context& m_ioc;
+    tcp::acceptor m_acceptor;
 
     mutable std::recursive_mutex m_mutex;
     std::vector<std::shared_ptr<ServerSession>> m_sessions;

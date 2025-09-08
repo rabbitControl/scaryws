@@ -16,34 +16,34 @@ namespace scaryws
 {
 
 ServerListener::ServerListener(net::io_context& ioc, tcp::endpoint endpoint, bool binary)
-    : ioc(ioc)
-    , acceptor(net::make_strand(ioc))
+    : m_ioc(ioc)
+    , m_acceptor(net::make_strand(ioc))
     , m_binary(binary)
 {
     beast::error_code ec;
 
-    acceptor.open(endpoint.protocol(), ec);
+    m_acceptor.open(endpoint.protocol(), ec);
     if (ec)
     {
         fail(ec, "acceptor open");
         return;
     }
 
-    acceptor.set_option(net::socket_base::reuse_address(true), ec);
+    m_acceptor.set_option(net::socket_base::reuse_address(true), ec);
     if (ec)
     {
         fail(ec, "acceptor set_option");
         return;
     }
 
-    acceptor.bind(endpoint, ec);
+    m_acceptor.bind(endpoint, ec);
     if (ec)
     {
         fail(ec, "acceptor bind");
         return;
     }    
 
-    acceptor.listen(net::socket_base::max_listen_connections, ec);
+    m_acceptor.listen(net::socket_base::max_listen_connections, ec);
     if (ec)
     {
         fail(ec, "acceptor listen");
@@ -71,8 +71,8 @@ void ServerListener::cancel()
         session->close();
     }
 
-    acceptor.cancel();
-    acceptor.close();
+    m_acceptor.cancel();
+    m_acceptor.close();
 }
 
 void ServerListener::sendToAll(const std::string& msg, void* except)
@@ -131,7 +131,7 @@ void ServerListener::sendTo(const std::vector<char>& data, void* client)
 
 bool ServerListener::isListening() const
 {
-    return acceptor.is_open();
+    return m_acceptor.is_open();
 }
 
 size_t ServerListener::sessionCount() const
@@ -143,8 +143,8 @@ size_t ServerListener::sessionCount() const
 void ServerListener::do_accept()
 {
     // The new connection gets its own strand
-    acceptor.async_accept(
-        net::make_strand(ioc),
+    m_acceptor.async_accept(
+        net::make_strand(m_ioc),
         beast::bind_front_handler(&ServerListener::on_accept,
                                   shared_from_this()));
 }
@@ -153,7 +153,7 @@ void ServerListener::on_accept(beast::error_code ec,
                                tcp::socket socket)
 {
     // This can happen during exit
-    if (!acceptor.is_open())
+    if (!m_acceptor.is_open())
     {
         return;
     }
@@ -198,11 +198,11 @@ void ServerListener::on_accept(beast::error_code ec,
                 it++;
             }
 
-            if (!acceptor.is_open() &&
+            if (!m_acceptor.is_open() &&
                 m_sessions.empty())
             {
                 // all clients closed - stop the world
-                ioc.stop();
+                m_ioc.stop();
             }
         });
 
